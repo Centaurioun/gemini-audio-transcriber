@@ -1,16 +1,6 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# Audio Transcriber with Speaker Diarization
 
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/drive/1bVC0eLBOooFRNLySMyQpaiK2SeDwzh7q
-
-## Audio Transcriber with Speaker Diarization
-
-> Audio transcription with speaker identification using Google Gemini 2.5 Flash API
+> Audio transcription with speaker identification using Google Gemini API (2.5 Flash or 2.5 Pro)
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-6.2-purple)](https://vitejs.dev/)
@@ -18,7 +8,7 @@ View your app in AI Studio: https://ai.studio/apps/drive/1bVC0eLBOooFRNLySMyQpai
 
 ## ✨ Features
 
-- 🎙️ **High-accuracy transcription** using Gemini 2.5 Flash
+- 🎙️ **High-accuracy transcription** using Gemini 2.5 Flash or 2.5 Pro
 - 👥 **Speaker diarization** with automatic or manual modes
 - 🔤 **Vocabulary hints** for domain-specific terminology
 - 📋 **Automatic debug logs** exported to files
@@ -26,6 +16,7 @@ View your app in AI Studio: https://ai.studio/apps/drive/1bVC0eLBOooFRNLySMyQpai
 - 🎯 **Batch processing** for large files
 - ⚡ **Fast setup** - no backend required
 - 🔍 **FileLogger debugging** - complete logs auto-download
+- 🚀 **Model flexibility** - Choose between fast (2.5 Flash) or more accurate (2.5 Pro)
 
 ## 📋 Table of Contents
 
@@ -49,8 +40,8 @@ View your app in AI Studio: https://ai.studio/apps/drive/1bVC0eLBOooFRNLySMyQpai
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/audio-transcriber-gemini-diarization.git
-   cd audio-transcriber-gemini-diarization
+   git clone https://github.com/yourusername/gemini-audio-transcriber.git
+   cd gemini-audio-transcriber
    ```
 
 2. **Install dependencies:**
@@ -100,6 +91,19 @@ npm run preview
 4. **Download logs** - 5 debug log files auto-download for troubleshooting
 
 ## ⚙️ Configuration
+
+### Gemini Model Selection
+
+The app uses Gemini 2.5 Flash by default for fast, cost-effective transcription. For more reliable and accurate results, especially with complex audio or multiple speakers, you can switch to **Gemini 2.5 Pro**:
+
+**To use Gemini 2.5 Pro:**
+- Open `index.tsx`
+- Find the line: `const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });`
+- Change to: `const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });`
+
+**Model Comparison:**
+- **2.5 Flash**: Faster, lower cost, good for clear audio with 1-3 speakers
+- **2.5 Pro**: More accurate, better speaker identification, recommended for complex scenarios
 
 ### Speaker Diarization Modes
 
@@ -270,15 +274,15 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 
 ## 🙏 Acknowledgments
 
-- Powered by [Google Gemini 2.5 Flash](https://ai.google.dev/)
+- Powered by [Google Gemini API](https://ai.google.dev/) (2.5 Flash / 2.5 Pro)
 - Built with [Vite](https://vitejs.dev/) and [TypeScript](https://www.typescriptlang.org/)
 - Inspired by the need for accurate speaker-identified transcriptions
 
 ## 📞 Contact & Support
 
-- **Issues**: [Report a bug](https://github.com/yourusername/audio-transcriber-gemini-diarization/issues)
-- **Discussions**: [Ask questions](https://github.com/yourusername/audio-transcriber-gemini-diarization/discussions)
-- **Pull Requests**: [Contribute code](https://github.com/yourusername/audio-transcriber-gemini-diarization/pulls)
+- **Issues**: [Report a bug](https://github.com/yourusername/gemini-audio-transcriber/issues)
+- **Discussions**: [Ask questions](https://github.com/yourusername/gemini-audio-transcriber/discussions)
+- **Pull Requests**: [Contribute code](https://github.com/yourusername/gemini-audio-transcriber/pulls)
 
 ## 🔒 Privacy & Security
 

@@ -15,8 +15,8 @@ By participating in this project, you agree to maintain a respectful and inclusi
 1. **Fork the repository**
 2. **Clone your fork:**
    ```bash
-   git clone https://github.com/yourusername/audio-transcriber-gemini-diarization.git
-   cd audio-transcriber-gemini-diarization
+   git clone https://github.com/yourusername/gemini-audio-transcriber.git
+   cd gemini-audio-transcriber
    ```
 3. **Install dependencies:**
    ```bash
@@ -236,7 +236,7 @@ export default function App() { }
 
 ### Before Submitting
 
-1. Check [existing issues](https://github.com/yourusername/audio-transcriber-gemini-diarization/issues)
+1. Check [existing issues](https://github.com/yourusername/gemini-audio-transcriber/issues)
 2. Test on the latest version
 3. Check the [Troubleshooting](README.md#troubleshooting) section
 
@@ -363,8 +363,8 @@ function downloadFile(content: string, filename: string, mimeType: string = 'tex
 
 ## 🤝 Getting Help
 
-- **Questions:** Use [GitHub Discussions](https://github.com/yourusername/audio-transcriber-gemini-diarization/discussions)
-- **Bugs:** Create an [Issue](https://github.com/yourusername/audio-transcriber-gemini-diarization/issues)
+- **Questions:** Use [GitHub Discussions](https://github.com/yourusername/gemini-audio-transcriber/discussions)
+- **Bugs:** Create an [Issue](https://github.com/yourusername/gemini-audio-transcriber/issues)
 - **Security:** Email maintainer directly (see README)
 
 ## 📄 License

@@ -1,12 +1,12 @@
 {
-  "name": "audio-transcriber-gemini-diarization",
+  "name": "gemini-audio-transcriber",
   "version": "1.0.0",
-  "description": "Audio transcription with speaker diarization using Google Gemini 2.5 Flash",
+  "description": "Audio transcription with speaker diarization using Google Gemini API (2.5 Flash or 2.5 Pro)",
   "author": "Your Name <your.email@example.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/audio-transcriber-gemini-diarization.git"
+    "url": "https://github.com/yourusername/gemini-audio-transcriber.git"
   },
   "keywords": [
     "audio",

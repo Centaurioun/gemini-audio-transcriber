@@ -79,8 +79,8 @@ For a complete, chronological log of all code changes, configuration updates, an
 
 **Note:** The detailed changelog archives contain extensive implementation notes, code snippets, and decision rationale that informed the initial release. They are preserved in `local-files/` for development reference but not included in the public repository.
 
-[unreleased]: https://github.com/yourusername/audio-transcriber-gemini-diarization/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/yourusername/audio-transcriber-gemini-diarization/releases/tag/v1.0.0
+[unreleased]: https://github.com/yourusername/gemini-audio-transcriber/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/yourusername/gemini-audio-transcriber/releases/tag/v1.0.0
 
 
 ---
