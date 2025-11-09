@@ -1,0 +1,6 @@
+{
+  "name": "Audio Transcriber with Diarization with Gemini 2.5 Flash",
+  "description": "Effortless dictation powered by Gemini. Turn long rambling recordings into perfectly transcribed notes with diarization.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}

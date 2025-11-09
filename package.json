@@ -1,0 +1,40 @@
+{
+  "name": "audio-transcriber-gemini-diarization",
+  "version": "1.0.0",
+  "description": "Audio transcription with speaker diarization using Google Gemini 2.5 Flash",
+  "author": "Your Name <your.email@example.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/audio-transcriber-gemini-diarization.git"
+  },
+  "keywords": [
+    "audio",
+    "transcription",
+    "diarization",
+    "gemini",
+    "speech-to-text",
+    "speaker-identification",
+    "typescript",
+    "vite"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@google/genai": "^0.12.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}
