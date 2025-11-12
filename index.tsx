@@ -8,6 +8,26 @@ import { GoogleGenAI, GenerateContentResponse } from '@google/genai';
 
 const MODEL_NAME = 'gemini-2.5-flash';
 const MAX_SPEAKERS = 10;
+const MISSING_API_KEY_MESSAGE = 'Missing Gemini API key. Set VITE_GEMINI_API_KEY (or GEMINI_API_KEY/API_KEY) in your .env file before running.';
+
+const resolveGeminiApiKey = (): string => {
+  const candidates = [
+    import.meta.env.VITE_GEMINI_API_KEY,
+    import.meta.env.GEMINI_API_KEY,
+    import.meta.env.API_KEY,
+  ];
+
+  const key = candidates.find((value) => typeof value === 'string' && value.trim().length > 0);
+
+  if (!key) {
+    console.warn(MISSING_API_KEY_MESSAGE);
+    return '';
+  }
+
+  return key.trim();
+};
+
+const GEMINI_API_KEY = resolveGeminiApiKey();
 
 // --- Utility Functions ---
 
@@ -202,6 +222,7 @@ const generateColor = (index: number): string => {
 
 class VoiceNotesApp {
   private genAI: GoogleGenAI;
+  private geminiApiKey: string;
 
   // --- UI Elements ---
   private processingStatus: HTMLDivElement;
@@ -244,13 +265,20 @@ class VoiceNotesApp {
   private logger: FileLogger | null = null;
 
   constructor() {
-    this.genAI = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    this.geminiApiKey = GEMINI_API_KEY;
+    this.genAI = new GoogleGenAI({ apiKey: this.geminiApiKey || 'missing-api-key' });
     this.bindDOM();
     this.loadSettings();
     this.bindEventListeners();
     this.initTheme();
     this.renderSettingsUI();
     this.createNewNote();
+    this.warnIfMissingApiKey();
+  }
+
+  private warnIfMissingApiKey(): void {
+    if (this.geminiApiKey) return;
+    this.processingStatus.textContent = MISSING_API_KEY_MESSAGE;
   }
 
   private bindDOM(): void {

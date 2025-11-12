@@ -56,6 +56,10 @@
 
 4. **Add your API key to `.env.local`:**
    ```env
+   # Primary key used by Vite during local dev and builds
+   VITE_GEMINI_API_KEY=your_actual_gemini_api_key_here
+
+   # Optional fallbacks kept for compatibility with older bundles/App Builder uploads
    GEMINI_API_KEY=your_actual_gemini_api_key_here
    API_KEY=your_actual_gemini_api_key_here
    ```
@@ -180,7 +184,7 @@ For files >20 MB:
 
 **Solutions:**
 1. Ensure `.env.local` file exists in project root
-2. Verify file contains: `GEMINI_API_KEY=your_key_here` and `API_KEY=your_key_here`
+2. Verify file contains: `VITE_GEMINI_API_KEY=your_key_here` (plus optional `GEMINI_API_KEY` / `API_KEY` for compatibility)
 3. Restart dev server after adding API key: `Ctrl+C`, then `npm run dev`
 4. Check for typos in environment variable names
 5. Don't put API key in quotes in .env.local
