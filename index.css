@@ -86,7 +86,7 @@
   --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   --font-mono: 'SF Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
-  --footer-height: 380px; /* Increased for always-visible settings */
+  --footer-height: 440px; /* Increased for more settings */
 }
 
 body.light-mode {
@@ -186,7 +186,22 @@ body {
   border-bottom: 1px solid var(--color-border);
   margin-bottom: 12px;
   transition: border-color var(--transition-normal);
+  gap: 16px;
 }
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.header-actions .action-button {
+    width: 40px;
+    height: 40px;
+    font-size: 16px;
+}
+
 
 .editor-title {
   font-size: 22px;
@@ -339,7 +354,7 @@ body {
 /* Speaker Settings - Always Visible */
 .speaker-settings {
     width: 100%;
-    max-width: 600px;
+    max-width: 800px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: 12px;
@@ -385,7 +400,7 @@ body {
 }
 .speaker-settings-content {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 10px 16px;
     width: 100%;
 }
@@ -467,6 +482,26 @@ body {
     color: var(--color-text);
     text-align: center;
 }
+
+.settings-select {
+    width: auto;
+    background: var(--color-bg-alt);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    color: var(--color-text);
+    font-family: var(--font-primary);
+    font-size: 13px;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.25rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+    padding-right: 1.75rem;
+}
+
 #speakerDetailsContainer {
     grid-column: 1 / -1;
     display: flex;
@@ -565,7 +600,7 @@ body {
 
 @media (max-width: 768px) {
   :root {
-    --footer-height: 420px;
+    --footer-height: 480px;
   }
   .speaker-settings-content {
     grid-template-columns: 1fr;

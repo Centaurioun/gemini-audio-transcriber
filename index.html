@@ -12,13 +12,16 @@
       rel="stylesheet"
     />
     <script type="importmap">
-      {
-        "imports": {
-          "@google/genai": "https://esm.sh/@google/genai@^0.12.0",
-          "marked": "https://esm.sh/marked@^4.0.0"
-        }
-      }
-    </script>
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^0.12.0",
+    "marked": "https://esm.sh/marked@^4.0.0",
+    "vite": "https://aistudiocdn.com/vite@^7.2.2",
+    "path": "https://aistudiocdn.com/path@^0.12.7",
+    "url": "https://aistudiocdn.com/url@^0.11.4"
+  }
+}
+</script>
   </head>
   <body>
     <div class="app-container">
@@ -27,6 +30,14 @@
           <div class="note-header">
             <div class="editor-title" contenteditable="true" placeholder="Untitled Note">
               Untitled Note
+            </div>
+            <div class="header-actions">
+                <button class="action-button" id="copyButton" title="Copy to Clipboard"><i class="fas fa-copy"></i></button>
+                <button class="action-button" id="exportTxtButton" title="Export as .txt"><i class="fas fa-file-alt"></i></button>
+                <button class="action-button" id="exportMdButton" title="Export as .md"><i class="fas fa-file-markdown"></i></button>
+                <button class="action-button" id="exportDocxButton" title="Export as .docx"><i class="fas fa-file-word"></i></button>
+                <button class="action-button" id="newButton" title="New Note / Clear"><i class="fas fa-file"></i></button>
+                <button class="action-button" id="themeToggleButton" title="Toggle Theme"><i class="fas fa-sun"></i></button>
             </div>
           </div>
 
@@ -47,12 +58,40 @@
 
           <div id="speakerSettings" class="speaker-settings">
             <div class="speaker-settings-header">
-              <h3 class="settings-title">Speaker Settings</h3>
+              <h3 class="settings-title">Transcription Settings</h3>
               <button id="resetSettingsButton" class="reset-settings-button" title="Reset to defaults">
                 <i class="fas fa-rotate-right"></i>
               </button>
             </div>
             <div class="speaker-settings-content">
+              <!-- Transcription Mode -->
+              <div class="setting-row">
+                <label for="outputMode">Output Mode</label>
+                <select id="outputMode" class="settings-select">
+                  <option value="cleaned">Cleaned (Minimal Edit)</option>
+                  <option value="verbatim">Verbatim</option>
+                </select>
+              </div>
+              <div class="setting-row" id="editBudgetRow">
+                <label for="cleanlinessBudgetPct" title="Max allowed change vs input (approx.)">Edit Budget (%)</label>
+                <input type="number" id="cleanlinessBudgetPct" min="0" max="30" value="10" class="speaker-count-input" />
+              </div>
+              <div class="setting-row">
+                <label for="displayFormatSelect">Display Format</label>
+                 <select id="displayFormatSelect" class="settings-select">
+                    <option value="speakersOnly">Speakers Only</option>
+                    <option value="timestampsAndSpeakers">Timestamps & Speakers</option>
+                    <option value="plain">Plain Text</option>
+                </select>
+              </div>
+              <div class="setting-row">
+                <label for="repairTimestamps" title="Normalize to [mm:ss] and inherit missing timestamps">Repair Timestamps</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="repairTimestamps" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+               <!-- Diarization -->
               <div class="setting-row">
                 <label for="diarizationToggle">Enable Diarization</label>
                 <label class="toggle-switch">
@@ -78,6 +117,13 @@
                   class="speaker-count-input"
                 />
               </div>
+               <div class="setting-row">
+                <label for="nonSpeechTags" title="Allow tags like [laughter], [music], etc.">Non-speech Tags</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="nonSpeechTags" />
+                  <span class="slider"></span>
+                </label>
+              </div>
               <div id="speakerDetailsContainer">
                 <!-- JS will populate this -->
               </div>
@@ -86,16 +132,29 @@
                 <textarea
                   id="vocabularyHints"
                   rows="2"
-                  placeholder="Add specific terms, one per line..."
+                  placeholder="Comma-separated proper nouns/terms..."
                 ></textarea>
+              </div>
+               <!-- Logging & Export -->
+              <div class="setting-row">
+                <label for="autoExport">Auto-Export Logs</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="autoExport" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="setting-row">
+                <label for="loggingLevel">Logging Level</label>
+                <select id="loggingLevel" class="settings-select">
+                    <option value="basic">Basic</option>
+                    <option value="verbose">Verbose</option>
+                    <option value="off">Off</option>
+                </select>
               </div>
             </div>
           </div>
 
           <div class="upload-controls">
-            <button class="action-button" id="themeToggleButton" title="Toggle Theme">
-              <i class="fas fa-sun"></i>
-            </button>
             <button id="uploadButton" class="upload-button" title="Upload Audio File">
               <div class="upload-button-inner">
                 <i class="fas fa-arrow-up-from-bracket"></i>
@@ -103,9 +162,6 @@
               </div>
             </button>
             <input type="file" id="fileInput" accept="audio/*" class="hidden" multiple />
-            <button class="action-button" id="newButton" title="New Note / Clear">
-              <i class="fas fa-file"></i>
-            </button>
           </div>
         </div>
       </div>
