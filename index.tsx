@@ -789,6 +789,79 @@ class VoiceNotesApp {
     }
   }
 
+  /**
+   * Apply minimal cleaning to text when in "cleaned" mode.
+   * Removes fillers, false starts, and micro-repetitions deterministically.
+   * Respects edit budget (default ~10%, clamp 0-30%).
+   * @param text - The text to clean
+   * @param budgetPct - Maximum edit percentage allowed (0-30)
+   * @returns Cleaned text
+   */
+  private applyMinimalCleaner(text: string, budgetPct: number): string {
+    if (!text || text.trim().length === 0) return text;
+    
+    const originalText = text;
+    const originalLength = originalText.length;
+    let cleanedText = text;
+
+    // Turkish fillers: eee, ıı/ııı, hani, yani, işte, şey, falan filan, böyle, hı hı
+    const turkishFillers = /\b(eee+|ı+|hani|yani|işte|şey|falan\s+filan|böyle|hı\s+hı)\b/gi;
+    
+    // English fillers: um, uh, like, you know, I mean, kinda, sorta
+    const englishFillers = /\b(um|uh|like|you\s+know|I\s+mean|kinda|sorta)\b/gi;
+    
+    // Remove fillers when standalone or followed by comma/space
+    cleanedText = cleanedText.replace(turkishFillers, '');
+    cleanedText = cleanedText.replace(englishFillers, '');
+    
+    // Collapse micro-repetitions: "word word" -> "word" (single instance per occurrence)
+    // Match word boundaries to avoid partial matches
+    cleanedText = cleanedText.replace(/\b(\w+)(\s+\1)+\b/gi, '$1');
+    
+    // Remove false starts: isolated dashes, ellipses at sentence start
+    cleanedText = cleanedText.replace(/^[\s\-—…,]+/, '');
+    cleanedText = cleanedText.replace(/[\s\-—…,]+\s+/g, ' ');
+    
+    // Clean up multiple spaces
+    cleanedText = cleanedText.replace(/\s{2,}/g, ' ');
+    
+    // Fix spacing around punctuation
+    cleanedText = cleanedText.replace(/\s+([,.!?;:])/g, '$1');
+    cleanedText = cleanedText.replace(/([,.!?;:])\s+/g, '$1 ');
+    
+    // Trim final result
+    cleanedText = cleanedText.trim();
+    
+    // Calculate edit distance as percentage
+    const editedLength = cleanedText.length;
+    const delta = Math.abs(originalLength - editedLength);
+    const editPct = originalLength > 0 ? (delta / originalLength) * 100 : 0;
+    
+    // If we exceeded the budget, fall back to minimal cleaning (only obvious fillers + whitespace)
+    if (editPct > budgetPct) {
+      if (this.logger) {
+        this.logger.saveParsingLog(
+          `Edit budget exceeded (${editPct.toFixed(1)}% > ${budgetPct}%). Falling back to minimal clean.`
+        );
+      }
+      
+      // Fallback: only remove the most obvious fillers and fix whitespace
+      let fallbackText = originalText;
+      fallbackText = fallbackText.replace(/\b(eee+|um|uh)\b/gi, '');
+      fallbackText = fallbackText.replace(/\s{2,}/g, ' ');
+      fallbackText = fallbackText.trim();
+      return fallbackText;
+    }
+    
+    if (this.logger && editPct > 0) {
+      this.logger.saveParsingLog(
+        `Minimal clean applied: ${editPct.toFixed(1)}% change (${originalLength} -> ${editedLength} chars)`
+      );
+    }
+    
+    return cleanedText;
+  }
+
   private postProcessTranscript(rawText: string): TranscriptSegment[] {
     if (this.logger) this.logger.log('PARSING', `🔍 Starting post-processing on ${rawText.length} chars.`);
 
@@ -843,6 +916,11 @@ class VoiceNotesApp {
         }
 
         if (!text) return;
+
+        // Apply minimal cleaner if in "cleaned" mode
+        if (this.settings.outputMode === 'cleaned') {
+            text = this.applyMinimalCleaner(text, this.settings.cleanlinessBudgetPct);
+        }
 
         let speaker = this.speakerMap.get(speakerName) || Array.from(this.speakerMap.values()).find(s => s.displayName === speakerName);
         if (!speaker) {
