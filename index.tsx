@@ -789,6 +789,98 @@ class VoiceNotesApp {
     }
   }
 
+  /**
+   * Apply minimal cleaning to text when in "cleaned" mode.
+   * Removes fillers, false starts, and micro-repetitions deterministically.
+   * Respects edit budget (default ~10%, clamp 0-30%).
+   * @param text - The text to clean
+   * @param budgetPct - Maximum edit percentage allowed (0-30)
+   * @returns Cleaned text
+   */
+  private applyMinimalCleaner(text: string, budgetPct: number): string {
+    if (!text || text.trim().length === 0) return text;
+    
+    const originalText = text;
+    const originalLength = originalText.length;
+    let cleanedText = text;
+
+    // Unconditionally remove short unambiguous fillers (Unicode-aware)
+    // Turkish short: eee+, ı+
+    cleanedText = cleanedText.replace(/\b(eee+|ı+)\b/giu, '');
+    // English short: um, uh
+    cleanedText = cleanedText.replace(/\b(um|uh)\b/giu, '');
+    
+    // Contentious fillers - remove only when isolated by pauses/punctuation on both sides
+    // Pattern: (pause)(filler)(pause) where pause = [\s,.;:!?—–-] but not line breaks
+    const contentiousFillers = ['like', 'kinda', 'sorta', 'you know', 'I mean', 'hani', 'yani', 'işte', 'şey', 'falan filan', 'böyle', 'hı hı'];
+    for (const filler of contentiousFillers) {
+      // Escape special regex characters and handle multi-word fillers
+      const escapedFiller = filler.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Match when preceded and followed by pause characters (excluding line breaks)
+      // Use [ \t] instead of \s to exclude line breaks, and preserve surrounding punctuation
+      const pattern = new RegExp(`([ \\t,.;:!?—–-])${escapedFiller}([ \\t,.;:!?—–-])`, 'giu');
+      cleanedText = cleanedText.replace(pattern, '$1$2');
+    }
+    
+    // Collapse micro-repetitions: "word word" -> "word" (Unicode-aware letters)
+    cleanedText = cleanedText.replace(/\b(\p{L}+)([ \t]+\1)+\b/giu, '$1');
+    
+    // Clean up multiple spaces first
+    cleanedText = cleanedText.replace(/\s{2,}/g, ' ');
+    
+    // Fix spacing around punctuation
+    // Remove space before punctuation
+    cleanedText = cleanedText.replace(/\s+([,.!?;:])/gu, '$1');
+    // Ensure space after punctuation
+    cleanedText = cleanedText.replace(/([,.!?;:])\s+/gu, '$1 ');
+    // Add missing space after punctuation if followed by word (hello,world → hello, world)
+    cleanedText = cleanedText.replace(/([,.!?;:])(?=\p{L})/gu, '$1 ');
+    
+    // Strip stray leading/trailing punctuation/dashes
+    cleanedText = cleanedText.replace(/^[\s\-—…,]+/, '');
+    cleanedText = cleanedText.replace(/[\s\-—…,]+$/, '');
+    
+    // Final trim
+    cleanedText = cleanedText.trim();
+    
+    // Calculate edit distance as percentage
+    const editedLength = cleanedText.length;
+    const delta = Math.abs(originalLength - editedLength);
+    const editPct = originalLength > 0 ? (delta / originalLength) * 100 : 0;
+    
+    // If we exceeded the budget, fall back to minimal cleaning
+    if (editPct > budgetPct) {
+      if (this.logger) {
+        this.logger.saveParsingLog(
+          `Edit budget exceeded (${editPct.toFixed(1)}% > ${budgetPct}%). Falling back to minimal clean.`
+        );
+      }
+      
+      // Fallback: only remove short fillers and apply punctuation spacing
+      let fallbackText = originalText;
+      // Remove only short unambiguous fillers (Unicode-aware)
+      fallbackText = fallbackText.replace(/\b(eee+|ı+|um|uh)\b/giu, '');
+      // Apply same punctuation spacing fixes
+      fallbackText = fallbackText.replace(/\s{2,}/g, ' ');
+      fallbackText = fallbackText.replace(/\s+([,.!?;:])/gu, '$1');
+      fallbackText = fallbackText.replace(/([,.!?;:])\s+/gu, '$1 ');
+      fallbackText = fallbackText.replace(/([,.!?;:])(?=\p{L})/gu, '$1 ');
+      // Strip stray leading/trailing punctuation
+      fallbackText = fallbackText.replace(/^[\s\-—…,]+/, '');
+      fallbackText = fallbackText.replace(/[\s\-—…,]+$/, '');
+      fallbackText = fallbackText.trim();
+      return fallbackText;
+    }
+    
+    if (this.logger && editPct > 0) {
+      this.logger.saveParsingLog(
+        `Minimal clean applied: ${editPct.toFixed(1)}% change (${originalLength} -> ${editedLength} chars)`
+      );
+    }
+    
+    return cleanedText;
+  }
+
   private postProcessTranscript(rawText: string): TranscriptSegment[] {
     if (this.logger) this.logger.log('PARSING', `🔍 Starting post-processing on ${rawText.length} chars.`);
 
@@ -843,6 +935,15 @@ class VoiceNotesApp {
         }
 
         if (!text) return;
+
+        // Apply minimal cleaner if in "cleaned" mode and budget > 0
+        if (this.settings.outputMode === 'cleaned') {
+            // Clamp budget to [0, 30], default 10
+            const budget = Math.max(0, Math.min(30, this.settings.cleanlinessBudgetPct ?? 10));
+            if (budget > 0) {
+                text = this.applyMinimalCleaner(text, budget);
+            }
+        }
 
         let speaker = this.speakerMap.get(speakerName) || Array.from(this.speakerMap.values()).find(s => s.displayName === speakerName);
         if (!speaker) {
