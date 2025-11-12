@@ -804,32 +804,42 @@ class VoiceNotesApp {
     const originalLength = originalText.length;
     let cleanedText = text;
 
-    // Turkish fillers: eee, ıı/ııı, hani, yani, işte, şey, falan filan, böyle, hı hı
-    const turkishFillers = /\b(eee+|ı+|hani|yani|işte|şey|falan\s+filan|böyle|hı\s+hı)\b/gi;
+    // Unconditionally remove short unambiguous fillers
+    // Turkish short: eee+, ı+
+    cleanedText = cleanedText.replace(/\b(eee+|ı+)\b/gi, '');
+    // English short: um, uh
+    cleanedText = cleanedText.replace(/\b(um|uh)\b/gi, '');
     
-    // English fillers: um, uh, like, you know, I mean, kinda, sorta
-    const englishFillers = /\b(um|uh|like|you\s+know|I\s+mean|kinda|sorta)\b/gi;
-    
-    // Remove fillers when standalone or followed by comma/space
-    cleanedText = cleanedText.replace(turkishFillers, '');
-    cleanedText = cleanedText.replace(englishFillers, '');
+    // Contentious fillers - remove only when isolated by pauses/punctuation on both sides
+    // Pattern: (pause)(filler)(pause) where pause = [\s,.;:!?—–-]
+    const contentiousFillers = ['like', 'kinda', 'sorta', 'you know', 'I mean', 'hani', 'yani', 'işte', 'şey', 'falan filan', 'böyle', 'hı hı'];
+    for (const filler of contentiousFillers) {
+      // Escape special regex characters and handle multi-word fillers
+      const escapedFiller = filler.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Match when preceded and followed by pause characters
+      const pattern = new RegExp(`([\\s,.;:!?—–-])${escapedFiller}([\\s,.;:!?—–-])`, 'gi');
+      cleanedText = cleanedText.replace(pattern, '$1$2');
+    }
     
     // Collapse micro-repetitions: "word word" -> "word" (single instance per occurrence)
-    // Match word boundaries to avoid partial matches
     cleanedText = cleanedText.replace(/\b(\w+)(\s+\1)+\b/gi, '$1');
     
-    // Remove false starts: isolated dashes, ellipses at sentence start
-    cleanedText = cleanedText.replace(/^[\s\-—…,]+/, '');
-    cleanedText = cleanedText.replace(/[\s\-—…,]+\s+/g, ' ');
-    
-    // Clean up multiple spaces
+    // Clean up multiple spaces first
     cleanedText = cleanedText.replace(/\s{2,}/g, ' ');
     
     // Fix spacing around punctuation
+    // Remove space before punctuation
     cleanedText = cleanedText.replace(/\s+([,.!?;:])/g, '$1');
+    // Ensure space after punctuation
     cleanedText = cleanedText.replace(/([,.!?;:])\s+/g, '$1 ');
+    // Add missing space after punctuation if followed by word (hello,world → hello, world)
+    cleanedText = cleanedText.replace(/([,.!?;:])(?=\w)/g, '$1 ');
     
-    // Trim final result
+    // Strip stray leading/trailing punctuation/dashes
+    cleanedText = cleanedText.replace(/^[\s\-—…,]+/, '');
+    cleanedText = cleanedText.replace(/[\s\-—…,]+$/, '');
+    
+    // Final trim
     cleanedText = cleanedText.trim();
     
     // Calculate edit distance as percentage
@@ -837,7 +847,7 @@ class VoiceNotesApp {
     const delta = Math.abs(originalLength - editedLength);
     const editPct = originalLength > 0 ? (delta / originalLength) * 100 : 0;
     
-    // If we exceeded the budget, fall back to minimal cleaning (only obvious fillers + whitespace)
+    // If we exceeded the budget, fall back to minimal cleaning
     if (editPct > budgetPct) {
       if (this.logger) {
         this.logger.saveParsingLog(
@@ -845,10 +855,18 @@ class VoiceNotesApp {
         );
       }
       
-      // Fallback: only remove the most obvious fillers and fix whitespace
+      // Fallback: only remove short fillers and apply punctuation spacing
       let fallbackText = originalText;
-      fallbackText = fallbackText.replace(/\b(eee+|um|uh)\b/gi, '');
+      // Remove only short unambiguous fillers
+      fallbackText = fallbackText.replace(/\b(eee+|ı+|um|uh)\b/gi, '');
+      // Apply same punctuation spacing fixes
       fallbackText = fallbackText.replace(/\s{2,}/g, ' ');
+      fallbackText = fallbackText.replace(/\s+([,.!?;:])/g, '$1');
+      fallbackText = fallbackText.replace(/([,.!?;:])\s+/g, '$1 ');
+      fallbackText = fallbackText.replace(/([,.!?;:])(?=\w)/g, '$1 ');
+      // Strip stray leading/trailing punctuation
+      fallbackText = fallbackText.replace(/^[\s\-—…,]+/, '');
+      fallbackText = fallbackText.replace(/[\s\-—…,]+$/, '');
       fallbackText = fallbackText.trim();
       return fallbackText;
     }
@@ -917,9 +935,13 @@ class VoiceNotesApp {
 
         if (!text) return;
 
-        // Apply minimal cleaner if in "cleaned" mode
+        // Apply minimal cleaner if in "cleaned" mode and budget > 0
         if (this.settings.outputMode === 'cleaned') {
-            text = this.applyMinimalCleaner(text, this.settings.cleanlinessBudgetPct);
+            // Clamp budget to [0, 30], default 10
+            const budget = Math.max(0, Math.min(30, this.settings.cleanlinessBudgetPct ?? 10));
+            if (budget > 0) {
+                text = this.applyMinimalCleaner(text, budget);
+            }
         }
 
         let speaker = this.speakerMap.get(speakerName) || Array.from(this.speakerMap.values()).find(s => s.displayName === speakerName);
