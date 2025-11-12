@@ -804,36 +804,37 @@ class VoiceNotesApp {
     const originalLength = originalText.length;
     let cleanedText = text;
 
-    // Unconditionally remove short unambiguous fillers
+    // Unconditionally remove short unambiguous fillers (Unicode-aware)
     // Turkish short: eee+, ı+
-    cleanedText = cleanedText.replace(/\b(eee+|ı+)\b/gi, '');
+    cleanedText = cleanedText.replace(/\b(eee+|ı+)\b/giu, '');
     // English short: um, uh
-    cleanedText = cleanedText.replace(/\b(um|uh)\b/gi, '');
+    cleanedText = cleanedText.replace(/\b(um|uh)\b/giu, '');
     
     // Contentious fillers - remove only when isolated by pauses/punctuation on both sides
-    // Pattern: (pause)(filler)(pause) where pause = [\s,.;:!?—–-]
+    // Pattern: (pause)(filler)(pause) where pause = [\s,.;:!?—–-] but not line breaks
     const contentiousFillers = ['like', 'kinda', 'sorta', 'you know', 'I mean', 'hani', 'yani', 'işte', 'şey', 'falan filan', 'böyle', 'hı hı'];
     for (const filler of contentiousFillers) {
       // Escape special regex characters and handle multi-word fillers
       const escapedFiller = filler.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // Match when preceded and followed by pause characters
-      const pattern = new RegExp(`([\\s,.;:!?—–-])${escapedFiller}([\\s,.;:!?—–-])`, 'gi');
+      // Match when preceded and followed by pause characters (excluding line breaks)
+      // Use [ \t] instead of \s to exclude line breaks, and preserve surrounding punctuation
+      const pattern = new RegExp(`([ \\t,.;:!?—–-])${escapedFiller}([ \\t,.;:!?—–-])`, 'giu');
       cleanedText = cleanedText.replace(pattern, '$1$2');
     }
     
-    // Collapse micro-repetitions: "word word" -> "word" (single instance per occurrence)
-    cleanedText = cleanedText.replace(/\b(\w+)(\s+\1)+\b/gi, '$1');
+    // Collapse micro-repetitions: "word word" -> "word" (Unicode-aware letters)
+    cleanedText = cleanedText.replace(/\b(\p{L}+)([ \t]+\1)+\b/giu, '$1');
     
     // Clean up multiple spaces first
     cleanedText = cleanedText.replace(/\s{2,}/g, ' ');
     
     // Fix spacing around punctuation
     // Remove space before punctuation
-    cleanedText = cleanedText.replace(/\s+([,.!?;:])/g, '$1');
+    cleanedText = cleanedText.replace(/\s+([,.!?;:])/gu, '$1');
     // Ensure space after punctuation
-    cleanedText = cleanedText.replace(/([,.!?;:])\s+/g, '$1 ');
+    cleanedText = cleanedText.replace(/([,.!?;:])\s+/gu, '$1 ');
     // Add missing space after punctuation if followed by word (hello,world → hello, world)
-    cleanedText = cleanedText.replace(/([,.!?;:])(?=\w)/g, '$1 ');
+    cleanedText = cleanedText.replace(/([,.!?;:])(?=\p{L})/gu, '$1 ');
     
     // Strip stray leading/trailing punctuation/dashes
     cleanedText = cleanedText.replace(/^[\s\-—…,]+/, '');
@@ -857,13 +858,13 @@ class VoiceNotesApp {
       
       // Fallback: only remove short fillers and apply punctuation spacing
       let fallbackText = originalText;
-      // Remove only short unambiguous fillers
-      fallbackText = fallbackText.replace(/\b(eee+|ı+|um|uh)\b/gi, '');
+      // Remove only short unambiguous fillers (Unicode-aware)
+      fallbackText = fallbackText.replace(/\b(eee+|ı+|um|uh)\b/giu, '');
       // Apply same punctuation spacing fixes
       fallbackText = fallbackText.replace(/\s{2,}/g, ' ');
-      fallbackText = fallbackText.replace(/\s+([,.!?;:])/g, '$1');
-      fallbackText = fallbackText.replace(/([,.!?;:])\s+/g, '$1 ');
-      fallbackText = fallbackText.replace(/([,.!?;:])(?=\w)/g, '$1 ');
+      fallbackText = fallbackText.replace(/\s+([,.!?;:])/gu, '$1');
+      fallbackText = fallbackText.replace(/([,.!?;:])\s+/gu, '$1 ');
+      fallbackText = fallbackText.replace(/([,.!?;:])(?=\p{L})/gu, '$1 ');
       // Strip stray leading/trailing punctuation
       fallbackText = fallbackText.replace(/^[\s\-—…,]+/, '');
       fallbackText = fallbackText.replace(/[\s\-—…,]+$/, '');
